@@ -1,8 +1,8 @@
-<?= $this->include('load/daterangapicker') ?>
-<?= $this->include('load/toggle') ?>
+<?= $this->include('julio101290\boilerplate\Views\load/daterangapicker') ?>
+<?= $this->include('julio101290\boilerplate\Views\load/toggle') ?>
 <?= $this->include('julio101290\boilerplate\Views\load\select2') ?>
 <?= $this->include('julio101290\boilerplate\Views\load\datatables') ?>
-<?= $this->include('load/extrasDatatable') ?>
+<?= $this->include('julio101290\boilerplate\Views\load/extrasDatatable') ?>
 <?= $this->include('julio101290\boilerplate\Views\load\nestable') ?>
 <!-- Extend from layout index -->
 <?= $this->extend('julio101290\boilerplate\Views\layout\index') ?>
@@ -10,8 +10,8 @@
 <!-- Section content -->
 <?= $this->section('content') ?>
 
-<?= $this->include('modulesXml/modalCaptureXml') ?>
-<?= $this->include('modulesXml/modalCancelarCFDI') ?>
+<?= $this->include('julio101290\boilerplateCFDI\Views\modulesXml/modalCaptureXml') ?>
+<?= $this->include('julio101290\boilerplateCFDI\Views\modulesXml/modalCancelarCFDI') ?>
 
 <!-- SELECT2 EXAMPLE -->
 <div class="card card-default">
@@ -37,7 +37,7 @@
 
 
                 <div class="form-group">
-                    <label for="idEmpresa">Empresa </label>
+                    <label for="idEmpresa"><?= lang('xml.companie') ?> </label>
                     <select id='idEmpresa' name='idEmpresa' class="idEmpresa" style='width: 80%;'>
 
                         <?php
@@ -64,10 +64,10 @@
             <div class="btn-group">
 
                 <div class="form-group">
-                    <label for="tipoComprobante">Tipo Comprobante </label>
+                    <label for="tipoComprobante"><?= lang('xml.tipoComprobante') ?> </label>
                     <select id='tiposComprobante' name='tiposComprobante' class="tiposComprobante" style='width: 80%;'>
 
-                        <option value="0">Seleccione tipo comprobante</option>
+                        <option value="0"><?= lang('xml.selectTipoComprobante') ?></option>
                         <?php
                         foreach ($tiposComprobante as $key => $value) {
 
@@ -85,12 +85,12 @@
             <div class="btn-group">
 
                 <div class="form-group">
-                    <label for="emitidoRecibido">Emitido / Recibido </label>
+                    <label for="emitidoRecibido"><?= lang('xml.emitidoRecibido') ?> </label>
                     <select id='emitidoRecibido' name='emitidoRecibido' class="emitidoRecibido" style='width: 80%;'>
 
-                        <option value="0">Todos</option>
-                        <option value="emitido">Emitido</option>
-                        <option value="recibido">Recibido</option>
+                        <option value="0"><?= lang('xml.emitidoRecibidoAlls') ?></option>
+                        <option value="emitido"><?= lang('xml.emitido') ?></option>
+                        <option value="recibido"><?= lang('xml.recibido') ?></option>
                     </select>
                 </div>
 
@@ -101,10 +101,10 @@
 
 
                 <div class="form-group">
-                    <label for="idEmpresa">RFC Emisor </label>
+                    <label for="idEmpresa"><?= lang('xml.RFCEmisor') ?></label>
                     <select id='RFCEmisor' name='RFCEmisor' class="RFCEmisor" style='width: 80%;'>
 
-                        <option value="0">Seleccione RFC Emisor </option>
+                        <option value="0"><?= lang('xml.selectRFCEmisor') ?> </option>
 
                     </select>
                 </div>
@@ -115,11 +115,11 @@
             <div class="btn-group">
 
                 <div class="form-group">
-                    <label for="idEmpresa">RFC Receptor </label>
+                    <label for="idEmpresa"><?= lang('xml.RFCReceptor') ?></label>
                     <select id='RFCReceptor' name='RFCReceptor' class="RFCReceptor" style='width: 80%;'>
 
 
-                        <option value="0">Seleccione RFC Receptor </option>
+                        <option value="0"><?= lang('xml.selectRFCReceptor') ?></option>
 
                     </select>
                 </div>
@@ -131,10 +131,10 @@
             <div class="btn-group">
 
                 <div class="form-group">
-                    <label for="idEmpresa">Uso CFDI </label>
+                    <label for="idEmpresa"><?= lang('xml.usoCFDI') ?> </label>
                     <select id='usoCFDI' name='usoCFDI' class="usoCFDI" style='width: 80%;'>
 
-                        <option value="0">Seleccione Uso del CFDI</option>
+                        <option value="0"><?= lang('xml.selectUsoCFDI') ?></option>
                         <?php
                         foreach ($usoCFDI as $key => $value) {
 
@@ -151,10 +151,10 @@
             <div class="btn-group">
 
                 <div class="form-group">
-                    <label for="metodoPago">Metodo de Pago </label>
+                    <label for="metodoPago"><?= lang('xml.metodoPago') ?> </label>
                     <select id='metodoPago' name='metodoPago' class="metodoPago" style='width: 80%;'>
 
-                        <option value="0">Seleccione el método de pago</option>
+                        <option value="0"><?= lang('xml.selectMetodoPago') ?> </option>
                         <?php
                         foreach ($metodoPago as $key => $value) {
 
@@ -171,10 +171,10 @@
             <div class="btn-group">
 
                 <div class="form-group">
-                    <label for="formaPago">Forma de Pago </label>
+                    <label for="formaPago"><?= lang('xml.formaPago') ?> </label>
                     <select id='formaPago' name='formaPago' class="formaPago" style='width: 80%;'>
 
-                        <option value="0">Seleccione el forma de pago</option>
+                        <option value="0"><?= lang('xml.selectFormaPago') ?></option>
                         <?php
                         foreach ($formaPago as $key => $value) {
 
@@ -191,12 +191,12 @@
             <div class="btn-group">
 
                 <div class="form-group">
-                    <label for="status">Status </label>
+                    <label for="status"><?= lang('xml.status') ?> </label>
                     <select id='status' name='status' class="status" style='width: 80%;'>
 
-                        <option value="0">Todos</option>
-                        <option value="vigente">Vigente</option>
-                        <option value="cancelado">Cancelado</option>
+                        <option value="0"><?= lang('xml.statusAlls') ?></option>
+                        <option value="vigente"><?= lang('xml.statusVigente') ?></option>
+                        <option value="cancelado"><?= lang('xml.statusCancelado') ?></option>
 
                     </select>
                 </div>
@@ -262,7 +262,11 @@
                         <thead>
                             <tr>
 
-                                <th>Seleccionar</th>
+                                <th>
+                                    
+                                <?= lang('xml.fields.select') ?>
+
+                                </th>
                                 <th>
                                     <?= lang('xml.fields.uuidTimbre') ?>
                                 </th>
@@ -275,19 +279,19 @@
                                 </th>
 
                                 <th>
-                                    RFC Emisor
+                                    <?= lang('xml.fields.RFCEmisor') ?>
                                 </th>
 
                                 <th>
-                                    RFC Receptor
+                                    <?= lang('xml.fields.RFCReceptor') ?>
                                 </th>
 
                                 <th>
-                                    Nombre Emisor
+                                    <?= lang('xml.fields.nombreReceptor') ?>
                                 </th>
 
                                 <th>
-                                    Nombre Receptor
+                                    <?= lang('xml.fields.nombreReceptor') ?>
                                 </th>
 
                                 <th>
