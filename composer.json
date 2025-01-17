@@ -1,6 +1,6 @@
 {
     "name": "julio101290/boilerplatecfdi",
-    "description": "library to administration cash tonnage",
+    "description": "library for the administration of CFDI electronic invoices, printing, uploading, downloading, etc.",
     "keywords": [
         "codeigniter4",
         "backup",
