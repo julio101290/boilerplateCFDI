@@ -674,20 +674,7 @@ class XmlController extends BaseController {
         return $this->respondDeleted($found, lang('xml.msg_delete'));
     }
 
-    public function generaPDFDesdeVenta($uuidVenta) {
 
-        // buscamos el id de la venta
-
-        $datosVenta = $this->sells->select("*")->where("UUID", $uuidVenta)->first();
-
-        //Buscamo el uuid del xml en xml enlazados
-
-        $enlaceXML = $this->enlaceXML->select("*")
-                        ->where("idDocumento", $datosVenta["id"])
-                        ->where("tipo", "ven")->first();
-
-        $this->generarPDF($enlaceXML["uuidXML"]);
-    }
 
     public function generaCartaPortePDFDesdeVenta($uuid) {
 
@@ -1334,91 +1321,11 @@ class XmlController extends BaseController {
 
     /*
 
-      public function xmlSinAsignar($tipo) {
-
-
-      helper('auth');
-      $userName = user()->username;
-      $idUser = user()->id;
-      $titulos["empresas"] = $this->empresas->mdlEmpresasPorUsuario($idUser);
-
-      if (count($titulos["empresas"]) == "0") {
-
-      $empresasID[0] = "0";
-      } else {
-
-      $empresasID = array_column($titulos["empresas"], "id");
-      }
-
-      $empresasRFC = array_column($titulos["empresas"], "rfc");
-
-      if ($this->request->isAJAX()) {
-      $datos = $this->xml->mdlXMLSinAsignar($empresasID, $tipo);
-
-      return \Hermawan\DataTables\DataTable::of($datos)->toJson(true);
-      }
-      }
+     
 
      */
 
-    /**
-     * Funcion para enlazar venta con XML Put in Sells
-     *      */
-    public function enlazaVenta() {
 
-        $auth = service('authentication');
-
-        if (!$auth->check()) {
-            $this->session->set('redirect_url', current_url());
-
-            echo "No se ha iniciado Session";
-            return;
-        }
-
-        helper('auth');
-        $userName = user()->username;
-        $idUser = user()->id;
-
-        $request = service('request');
-        $postData = $request->getPost();
-
-        //Buscamos los datos de la venta
-        $venta = $this->sells->select("*")->where("UUID", $postData["uuidVenta"])->first();
-
-        $xml = $this->xml->select("*")->where("uuidTimbre", $postData["uuidTimbre"])->first();
-
-        $datos["idDocumento"] = $venta["id"];
-        $datos["uuidXML"] = $postData["uuidTimbre"];
-        $datos["tipo"] = "ven";
-        $datos["importe"] = $xml["total"];
-
-        if ($this->enlaceXML->save($datos) === false) {
-
-            $errores = $this->enlaceXML->errors();
-
-            $listErrors = "";
-
-            foreach ($errores as $field => $error) {
-
-                $listErrors .= $error . " ";
-            }
-
-            echo $listErrors;
-
-            return;
-        }
-
-
-        /**
-         * Registramos en bitacora
-         */
-        $datosBitacora["description"] = "Se enlazo el XML $postData[uuidTimbre] con la venta $postData[uuidVenta]" . json_encode($datos);
-        $datosBitacora["user"] = $userName;
-
-        $this->log->save($datosBitacora);
-
-        echo "Guardado Correctamente";
-    }
 
     /**
      * Funcion para enlazar pago con complemento de pago XML
