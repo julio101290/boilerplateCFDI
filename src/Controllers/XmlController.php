@@ -441,13 +441,13 @@ class XmlController extends BaseController {
         $userName = user()->username;
         $idUser = user()->id;
         $datos = $this->request->getPost();
-        
+
         $empresa = $this->empresas->select("*")
-                        ->where("id",$datos["idEmpresa"])
-                        ->findAll();
-        
+                ->where("id", $datos["idEmpresa"])
+                ->findAll();
+
         $empresa = $empresa[0];
-                        
+
         if (!isset($datos["idXml"])) {
 
             $datos["idXml"] = 0;
@@ -577,17 +577,15 @@ class XmlController extends BaseController {
                     $datos["formaPago"] = $comprobante['FormaPago'];
                     $datos["usoCFDI"] = $receptor['UsoCFDI'];
                     $datos["exportacion"] = $comprobante['Exportacion'];
-                    
-                    if($empresa["rfc"] == $datos["rfcEmisor"] ){
-                        
-                         $datos["emitidoRecibido"] = "emitido";
-                        
-                    }else{
-                        
-                         $datos["emitidoRecibido"] = "recibido";
-                        
+
+                    if ($empresa["rfc"] == $datos["rfcEmisor"]) {
+
+                        $datos["emitidoRecibido"] = "emitido";
+                    } else {
+
+                        $datos["emitidoRecibido"] = "recibido";
                     }
-                   
+
 
                     if (isset($comprobante["Serie"])) {
 
@@ -674,8 +672,6 @@ class XmlController extends BaseController {
         return $this->respondDeleted($found, lang('xml.msg_delete'));
     }
 
-
-
     public function generaCartaPortePDFDesdeVenta($uuid) {
 
         // buscamos el id de la venta
@@ -724,7 +720,8 @@ class XmlController extends BaseController {
         $this->generarPDF($enlaceXML["uuidXML"]);
     }
 
-    public function generarPDF($idPDF) {
+    public function generarPDF($idPDF,$responseExtenal =false) {
+
 
         $datosXML = $this->xml->where('uuidTimbre', $idPDF)->first();
 
@@ -748,11 +745,22 @@ class XmlController extends BaseController {
         );
 
         // create the invoice as output.pdf
+
         $archivo = $converter->createPdf($cfdiData);
 
         $archivo = file_get_contents($archivo);
 
-        $this->response->setHeader("Content-Type", "application/pdf");
+        if (!$responseExtenal) {
+
+            $this->response->setHeader("Content-Type", "application/pdf");
+        } else {
+
+           return $archivo;
+        }
+
+
+
+
         echo $archivo;
     }
 
@@ -893,32 +901,7 @@ class XmlController extends BaseController {
       }
      */
 
-    /*
-     * ZML ENLAZADOS POR DOCUMENTO
-     */
 
-    public function getXMLEnlazadosPagos($uuid) {
-
-        try {
-
-            $datosPagos = $this->pagos->select("*")->where("UUID", $uuid)->first();
-
-            if (isset($datosPagos)) {
-
-                $datosXMLEnlazados = $this->enlaceXML->select("id,idDocumento,uuidXML,tipo,importe")
-                        ->where("idDocumento", $datosPagos["id"])
-                        ->where("tipo", "pag");
-                return \Hermawan\DataTables\DataTable::of($datosXMLEnlazados)->toJson(true);
-            } else {
-
-                $datosXMLEnlazados = $this->enlaceXML->select("id,idDocumento,uuidXML,tipo,importe")->where("idDocumento", 0);
-                return \Hermawan\DataTables\DataTable::of($datosXMLEnlazados)->toJson(true);
-            }
-        } catch (Exception $ex) {
-
-            return $ex->getMessage();
-        }
-    }
 
     /*
      * ZML ENLAZADOS POR DOCUMENTO
@@ -1321,11 +1304,9 @@ class XmlController extends BaseController {
 
     /*
 
-     
+
 
      */
-
-
 
     /**
      * Funcion para enlazar pago con complemento de pago XML
