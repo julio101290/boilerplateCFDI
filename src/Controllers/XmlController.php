@@ -10,8 +10,8 @@ use julio101290\boilerplatelog\Models\LogModel;
 use CodeIgniter\API\ResponseTrait;
 use ZipArchive;
 // use julio101290\boilerplatesells\Models\SellsModel;
-//use App\Models\EnlacexmlModel;
-//use App\Models\PagosModel;
+use julio101290\boilerplatesells\Models\EnlacexmlModel;
+use julio101290\boilerplatecomplementopago\Models\PagosModel;
 use PhpCfdi\XmlCancelacion\Capsules\Cancellation;
 use PhpCfdi\XmlCancelacion\Credentials;
 use PhpCfdi\XmlCancelacion\Models\CancelDocument;
@@ -35,8 +35,8 @@ class XmlController extends BaseController {
 
     //protected $sells;
     //protected $cartaPorte;
-    //protected $enlaceXML;
-    //protected $pagos;
+    protected $enlaceXML;
+    protected $pagos;
     //protected $serieElectronica;
     //protected $notaCredito;
 
@@ -45,9 +45,9 @@ class XmlController extends BaseController {
         $this->log = new LogModel();
         $this->empresas = new EmpresasModel();
         //$this->sells = new SellsModel();
-        //$this->enlaceXML = new EnlacexmlModel();
+        $this->enlaceXML = new EnlacexmlModel();
         //$this->ventas = new SellsModel();
-        //$this->pagos = new PagosModel();
+        $this->pagos = new PagosModel();
         //$this->cartaPorte = new CartaPorteModel();
         //$this->serieElectronica = new SeriesfacturaelectronicaModel();
         //$this->notaCredito = new NotascreditoModel();
