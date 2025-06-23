@@ -143,15 +143,68 @@ class XmlModel extends Model {
         return $resultado;
     }
 
-    public function mdlXMLSinAsignar($empresas, $tipoComprobante) {
+    public function mdlXMLSinAsignar($empresas, $tipoComprobante, $params = []) {
+        $dbDriver = $this->db->getPlatform();
 
-        $resultado = $this->db->table('xml a')
-                ->select('a.id,a.uuidTimbre,serie,folio,rfcReceptor,rfcEmisor,nombreReceptor,total,fecha,tipoComprobante')
-                ->where("not exists (select * from enlacexml b where a.uuidTimbre=b.uuidXML)", '', FALSE)
-                ->where("a.tipoComprobante", $tipoComprobante)
-                ->whereIn(' idEmpresa', $empresas);
+        // Condición SQL raw para subconsulta, ajustada por motor
+        $subquery = $dbDriver === 'Postgre' ? 'NOT EXISTS (SELECT 1 FROM enlacexml b WHERE "a"."uuidTimbre" = "b"."uuidXML")' : 'NOT EXISTS (SELECT 1 FROM enlacexml b WHERE a.uuidTimbre = b.uuidXML)';
 
-        return $resultado;
+        $builder = $this->db->table('xml a')
+                ->select('a.id, a.uuidTimbre, serie, folio, rfcReceptor, rfcEmisor, nombreReceptor, total, fecha, tipoComprobante')
+                ->where($subquery, null, false)
+                ->where('a.tipoComprobante', $tipoComprobante)
+                ->whereIn('a.idEmpresa', $empresas);
+
+        // 🔍 Filtros por columna específicos
+        if (!empty($params['columns'])) {
+            foreach ($params['columns'] as $col) {
+                if (!empty($col['search']['value'])) {
+                    $builder->like($col['data'], $col['search']['value']);
+                }
+            }
+        }
+
+        // 🔎 Búsqueda global en campos específicos
+        $search = $params['search']['value'] ?? '';
+        if (!empty($search)) {
+            $builder->groupStart();
+            $camposBusqueda = ['uuidTimbre', 'serie', 'folio', 'rfcReceptor', 'nombreReceptor'];
+            foreach ($camposBusqueda as $campo) {
+                $builder->orLike("a.$campo", $search);
+            }
+            $builder->groupEnd();
+        }
+
+        // ↕ Ordenamiento
+        if (!empty($params['order'])) {
+            foreach ($params['order'] as $ord) {
+                $colIndex = $ord['column'];
+                $dir = $ord['dir'] ?? 'asc';
+                $colName = $params['columns'][$colIndex]['data'];
+                $builder->orderBy($colName, $dir);
+            }
+        }
+
+        // 📄 Paginación
+        if (isset($params['length']) && $params['length'] != -1) {
+            $builder->limit($params['length'], $params['start']);
+        }
+
+        $data = $builder->get()->getResultArray();
+
+        // 🔢 Total sin filtros
+        $totalBuilder = $this->db->table('xml a')
+                ->where($subquery, null, false)
+                ->where('a.tipoComprobante', $tipoComprobante)
+                ->whereIn('a.idEmpresa', $empresas);
+
+        $total = $totalBuilder->countAllResults();
+
+        return [
+            'data' => $data,
+            'recordsTotal' => $total,
+            'recordsFiltered' => $total,
+        ];
     }
 
     /**
