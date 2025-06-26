@@ -211,53 +211,51 @@ class XmlModel extends Model {
      * Buscar parcialidad
      */
     public function mdlParcialidadVenta($idVenta, $idPago) {
-
-        return $this->db->table('payments a, sells b, enlacexml c, pagos d, xml e')
-                        ->select('*')
-                        ->where('a.idSell', 'b.id', FALSE)
-                        ->where('a.idComplemento', 'd.id', FALSE)
-                        ->where('d.id', 'c.idDocumento', FALSE)
-                        ->where('e.uuidTimbre', 'c.uuidXML', FALSE)
+        return $this->db->table('payments a')
+                        ->join('sells b', 'a.idSell = b.id')
+                        ->join('pagos d', 'a.idComplemento = d.id')
+                        ->join('enlacexml c', 'd.id = c.idDocumento')
+                        ->join('xml e', 'e.uuidTimbre = c.uuidXML')
                         ->where('e.status', 'vigente')
                         ->where('b.id', $idVenta)
-                        ->where('d.id <>', $idPago)->countAllResults();
+                        ->where('d.id !=', $idPago)
+                        ->countAllResults();
     }
 
     /**
      * Buscar parcialidad
      */
     public function mdlSaldo($idVenta, $idPago) {
+        // Obtener importe a pagar
+        $importeAPagar = $this->db->table('payments a')
+                ->join('sells b', 'a.idSell = b.id')
+                ->join('pagos d', 'a.idComplemento = d.id')
+                ->join('enlacexml c', 'd.id = c.idDocumento')
+                ->join('xml e', 'e.uuidTimbre = c.uuidXML')
+                ->selectSum('a.importPayment')
+                ->where('e.status', 'vigente')
+                ->where('b.id', $idVenta)
+                ->where('d.id !=', $idPago)
+                ->get()
+                ->getRowArray();
 
-        $importeAPagar = $this->db->table('payments a, sells b, enlacexml c, pagos d, xml e')
-                        ->selectSum("a.importPayment")
-                        ->where('a.idSell', 'b.id', FALSE)
-                        ->where('a.idComplemento', 'd.id', FALSE)
-                        ->where('d.id', 'c.idDocumento', FALSE)
-                        ->where('e.uuidTimbre', 'c.uuidXML', FALSE)
-                        ->where('e.status', 'vigente')
-                        ->where('b.id', $idVenta)
-                        ->where('d.id <>', $idPago)->get()->getResultArray();
+        // Obtener importe devuelto
+        $importeDevuelto = $this->db->table('payments a')
+                ->join('sells b', 'a.idSell = b.id')
+                ->join('pagos d', 'a.idComplemento = d.id')
+                ->join('enlacexml c', 'd.id = c.idDocumento')
+                ->join('xml e', 'e.uuidTimbre = c.uuidXML')
+                ->selectSum('a.importBack')
+                ->where('e.status', 'vigente')
+                ->where('b.id', $idVenta)
+                ->where('d.id !=', $idPago)
+                ->get()
+                ->getRowArray();
 
-        $importeDevuelto = $this->db->table('payments a, sells b, enlacexml c, pagos d, xml e')
-                        ->selectSum("a.importBack")
-                        ->where('a.idSell', 'b.id', FALSE)
-                        ->where('a.idComplemento', 'd.id', FALSE)
-                        ->where('d.id', 'c.idDocumento', FALSE)
-                        ->where('e.uuidTimbre', 'c.uuidXML', FALSE)
-                        ->where('e.status', 'vigente')
-                        ->where('b.id', $idVenta)
-                        ->where('d.id <>', $idPago)->get()->getResultArray();
+        // Normalizar valores nulos o faltantes
+        $importeAPagarVal = isset($importeAPagar['importPayment']) ? $importeAPagar['importPayment'] : 0;
+        $importeDevueltoVal = isset($importeDevuelto['importBack']) ? $importeDevuelto['importBack'] : 0;
 
-        if (!isset($importeAPagar["importPayment"])) {
-
-            $importeAPagar["importPayment"] = 0;
-        }
-
-        if (!isset($importeDevuelto["importBack"])) {
-
-            $importeDevuelto["importBack"] = 0;
-        }
-
-        return $importeAPagar["importPayment"] - $importeDevuelto["importBack"];
+        return $importeAPagarVal - $importeDevueltoVal;
     }
 }
