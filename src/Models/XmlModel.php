@@ -55,34 +55,46 @@ class XmlModel extends Model {
     protected $skipValidation = false;
 
     public function getIngresosXMLGrafica($empresas, $RFCEmpresas, $desdeFecha, $hastaFecha) {
-        if (count($RFCEmpresas) > 1) {
+        // Detectar si estamos usando PostgreSQL o MySQL/MariaDB
+        $dbDriver = $this->db->DBDriver;
 
-            $coma = "";
+        // Elegir la función de agrupación por periodo
+        if ($dbDriver === 'Postgre') {
+            $periodExpr = "TO_CHAR(\"xml\".\"fecha\", 'YYYYMM')";
         } else {
-
-            $coma = "'";
+            $periodExpr = "DATE_FORMAT(`xml`.`fecha`, '%Y%m')";
         }
-        $rfcImplode = implode("',", $RFCEmpresas);
 
-        $result = $this->db->table('xml')
-                ->select('date_format(fecha,\'%Y%m\') as periodo
-            ,sum(case when
-            (rfcEmisor in(\'' . $rfcImplode . $coma . ') and tipoComprobante=\'I\') or ( rfcReceptor in(\'' . $rfcImplode . $coma . ') and tipoComprobante=\'N\')  
-             or ( rfcReceptor in (\'' . $rfcImplode . $coma . ') and tipoComprobante=\'E\')
-             then total
-            else 0
-            end) as ingreso,sum(case when
-            (rfcEmisor in (\'' . $rfcImplode . $coma . ') and tipoComprobante=\'E\') or ( rfcReceptor not in(\'' . $rfcImplode . $coma . ') and tipoComprobante=\'N\')  
-             or ( rfcReceptor in (\'' . $rfcImplode . $coma . ') and tipoComprobante=\'I\')
-             then total
-            else 0
-            end) as egreso')
-                ->whereIn('idEmpresa', $empresas)
-                ->where('fechaTimbrado >=', $desdeFecha . ' 00:00:00')
-                ->where('fechaTimbrado <=', $hastaFecha . ' 23:59:59')
-                ->groupBy('date_format(fecha,\'%Y%m\')')
-                ->get();
-        return $result;
+        // Escapar manualmente los RFCs para armar el IN (...) de forma segura
+        $escapedRFCs = "('" . implode("','", array_map([$this->db, 'escapeString'], $RFCEmpresas)) . "')";
+
+        $builder = $this->db->table('xml');
+
+        $builder->select("{$periodExpr} as periodo", false)
+                ->select("
+            SUM(CASE 
+                WHEN 
+                    (\"xml\".\"rfcEmisor\" IN {$escapedRFCs} AND \"xml\".\"tipoComprobante\" = 'I') OR
+                    (\"xml\".\"rfcReceptor\" IN {$escapedRFCs} AND \"xml\".\"tipoComprobante\" = 'N') OR
+                    (\"xml\".\"rfcReceptor\" IN {$escapedRFCs} AND \"xml\".\"tipoComprobante\" = 'E')
+                THEN \"xml\".\"total\"
+                ELSE 0
+            END) as ingreso", false)
+                ->select("
+            SUM(CASE 
+                WHEN 
+                    (\"xml\".\"rfcEmisor\" IN {$escapedRFCs} AND \"xml\".\"tipoComprobante\" = 'E') OR
+                    (\"xml\".\"rfcReceptor\" NOT IN {$escapedRFCs} AND \"xml\".\"tipoComprobante\" = 'N') OR
+                    (\"xml\".\"rfcReceptor\" IN {$escapedRFCs} AND \"xml\".\"tipoComprobante\" = 'I')
+                THEN \"xml\".\"total\"
+                ELSE 0
+            END) as egreso", false)
+                ->whereIn('xml.idEmpresa', $empresas)
+                ->where('xml.fechaTimbrado >=', $desdeFecha . ' 00:00:00')
+                ->where('xml.fechaTimbrado <=', $hastaFecha . ' 23:59:59')
+                ->groupBy($periodExpr);
+
+        return $builder->get();
     }
 
     public function getEgresosXMLGrafica($empresas, $RFCEmpresas, $desdeFecha, $hastaFecha) {
