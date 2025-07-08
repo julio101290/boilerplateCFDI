@@ -270,4 +270,78 @@ class XmlModel extends Model {
 
         return $importeAPagarVal - $importeDevueltoVal;
     }
+
+    public function obtenerXMLDatatable($params) {
+        $columns = [
+            'id',
+            'uuidTimbre',
+            'archivoXML',
+            'rfcEmisor',
+            'rfcReceptor',
+            'nombreEmisor',
+            'nombreReceptor',
+            'serie',
+            'folio',
+            'tipoComprobante',
+            'fecha',
+            'fechaTimbrado',
+            'total',
+            'metodoPago',
+            'formaPago',
+            'usoCFDI',
+            'exportacion',
+            'created_at',
+            'updated_at',
+            'deleted_at',
+            'status',
+            'uuidPaquete'
+        ];
+
+        $builder = $this->db->table('xml')
+                ->select($columns)
+                ->where('deleted_at', null);
+
+        // Filtro por empresa
+        if (!empty($params['idEmpresa'])) {
+            $builder->whereIn('idEmpresa', $params['idEmpresa']);
+        }
+
+        // Búsqueda global
+        if (!empty($params['search']['value'])) {
+            $search = $params['search']['value'];
+            $builder->groupStart();
+            foreach ($columns as $col) {
+                $builder->orLike($col, $search);
+            }
+            $builder->groupEnd();
+        }
+
+        // Ordenamiento
+        if (isset($params['order'][0])) {
+            $orderColumn = $columns[$params['order'][0]['column']] ?? 'id';
+            $orderDir = $params['order'][0]['dir'] ?? 'DESC';
+            $builder->orderBy($orderColumn, $orderDir);
+        } else {
+            $builder->orderBy('id', 'DESC');
+        }
+
+        // Clonar para contar filtrados
+        $builderCount = clone $builder;
+        $recordsFiltered = $builderCount->countAllResults(false);
+
+        // Paginación
+        if (isset($params['start']) && isset($params['length']) && $params['length'] != -1) {
+            $builder->limit((int) $params['length'], (int) $params['start']);
+        }
+
+        $data = $builder->get()->getResultArray();
+        $recordsTotal = $this->db->table('xml')->where('deleted_at', null)->countAllResults();
+
+        return [
+            'draw' => intval($params['draw'] ?? 1),
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $data,
+        ];
+    }
 }

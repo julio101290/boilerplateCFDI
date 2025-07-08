@@ -32,11 +32,11 @@ class XmlController extends BaseController {
     protected $log;
     protected $xml;
     protected $empresas;
-
     //protected $sells;
     //protected $cartaPorte;
     protected $enlaceXML;
     protected $pagos;
+
     //protected $serieElectronica;
     //protected $notaCredito;
 
@@ -72,30 +72,81 @@ class XmlController extends BaseController {
         }
 
         if ($this->request->isAJAX()) {
-            $datos = $this->xml->select('id
-             ,uuidTimbre
-             ,archivoXML
-             ,rfcEmisor
-             ,rfcReceptor
-             ,nombreEmisor
-             ,nombreReceptor
-             ,serie
-             ,folio
-             ,tipoComprobante
-             ,fecha
-             ,fechaTimbrado
-             ,total
-             ,metodoPago
-             ,formaPago
-             ,usoCFDI
-             ,exportacion
-             ,created_at
-             ,deleted_at,
-             ,status
-             ,updated_at
-             ,uuidPaquete')->where('deleted_at', null)->whereIn("idEmpresa", $empresasID);
+            $request = service('request');
 
-            return \Hermawan\DataTables\DataTable::of($datos)->toJson(true);
+            // Datos del request de DataTables
+            $draw = $request->getGet('draw');
+            $start = (int) $request->getGet('start');   // 👈 Aquí
+            $length = (int) $request->getGet('length'); // 👈 Aquí
+            $searchValue = $request->getGet('search')['value'] ?? '';
+            $orderColumnIndex = $request->getGet('order')[0]['column'] ?? 0;
+            $orderDir = $request->getGet('order')[0]['dir'] ?? 'asc';
+
+            // Columnas disponibles (deben coincidir con las del select y las columnas de DataTables JS)
+            $columns = [
+                'id',
+                'uuidTimbre',
+                'archivoXML',
+                'rfcEmisor',
+                'rfcReceptor',
+                'nombreEmisor',
+                'nombreReceptor',
+                'serie',
+                'folio',
+                'tipoComprobante',
+                'fecha',
+                'fechaTimbrado',
+                'total',
+                'metodoPago',
+                'formaPago',
+                'usoCFDI',
+                'exportacion',
+                'created_at',
+                'deleted_at',
+                'status',
+                'updated_at',
+                'uuidPaquete',
+            ];
+
+            $builder = $this->xml
+                    ->select(implode(',', $columns))
+                    ->where('deleted_at', null)
+                    ->whereIn("idEmpresa", $empresasID);
+
+            // Total de registros sin filtrar
+            $total = $builder->countAllResults(false);
+
+            // Buscar en múltiples columnas
+            if ($searchValue !== '') {
+                $builder->groupStart();
+                foreach ($columns as $col) {
+                    $builder->orLike($col, $searchValue);
+                }
+                $builder->groupEnd();
+            }
+
+            // Total con filtro aplicado
+            $filtered = $builder->countAllResults(false);
+
+            // Orden y límite
+            $orderColumn = $columns[$orderColumnIndex] ?? 'id';
+            $builder->orderBy($orderColumn, $orderDir);
+            $builder->limit($length, $start);
+
+            $datos = $builder->get()->getResult();
+
+            // Convertir a array
+            $data = [];
+            foreach ($datos as $row) {
+                $data[] = (array) $row;
+            }
+
+            return $this->response->setJSON([
+                        'draw' => intval($draw),
+                        'recordsTotal' => $total,
+                        'recordsFiltered' => $filtered,
+                        'data' => $data
+            ]);
         }
 
         $titulos["formaPago"] = $this->catalogosSAT->formasDePago40()->searchByField("texto", "%%", 99999);
@@ -128,30 +179,14 @@ class XmlController extends BaseController {
         }
 
         if ($this->request->isAJAX()) {
-            $datos = $this->xml->select('id
-             ,uuidTimbre
-             ,archivoXML
-             ,rfcEmisor
-             ,rfcReceptor
-             ,nombreEmisor
-             ,nombreReceptor
-             ,serie
-             ,folio
-             ,tipoComprobante
-             ,fecha
-             ,fechaTimbrado
-             ,total
-             ,metodoPago
-             ,formaPago
-             ,usoCFDI
-             ,exportacion
-             ,created_at
-             ,deleted_at,
-             ,status
-             ,updated_at
-             ,uuidPaquete')->where('deleted_at', null)->whereIn("idEmpresa", $empresasID);
 
-            return \Hermawan\DataTables\DataTable::of($datos)->toJson(true);
+            $request = service('request');
+            $params = $request->getGet();
+
+            $xmlModel = new \App\Models\XmlModel();
+            $data = $xmlModel->obtenerXMLDatatable($empresasID);
+
+            return $this->response->setJSON($data);
         }
 
 
@@ -164,7 +199,7 @@ class XmlController extends BaseController {
         $titulos["title"] = lang('xml.title');
         $titulos["subtitle"] = lang('xml.subtitle');
 
-        return view('xml', $titulos);
+        return view('julio101290\boilerplateCFDI\Views\xml', $titulos);
     }
 
     public function xmlFilters($desdeFecha
@@ -619,6 +654,8 @@ class XmlController extends BaseController {
 
                         $dateLog["description"] = lang("xml.logDescription") . json_encode($datos);
                         $dateLog["user"] = $userName;
+
+                        $this->log->save($dateLog);
                     }
 
 
@@ -628,7 +665,7 @@ class XmlController extends BaseController {
 
 
 
-                    $this->log->save($dateLog);
+
 
                     echo "Guardado Correctamente";
                 }
@@ -720,7 +757,7 @@ class XmlController extends BaseController {
         $this->generarPDF($enlaceXML["uuidXML"]);
     }
 
-    public function generarPDF($idPDF,$responseExtenal =false) {
+    public function generarPDF($idPDF, $responseExtenal = false) {
 
 
         $datosXML = $this->xml->where('uuidTimbre', $idPDF)->first();
@@ -755,7 +792,7 @@ class XmlController extends BaseController {
             $this->response->setHeader("Content-Type", "application/pdf");
         } else {
 
-           return $archivo;
+            return $archivo;
         }
 
 

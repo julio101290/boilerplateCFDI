@@ -263,8 +263,8 @@
                             <tr>
 
                                 <th>
-                                    
-                                <?= lang('xml.fields.select') ?>
+
+                                    <?= lang('xml.fields.select') ?>
 
                                 </th>
                                 <th>
@@ -989,41 +989,37 @@
 <?php
 if (isset($gastosFacturados)) {
 
-
-
     $filtrosGastrosFacturados = <<<EOT
-                
-                        var datePicker = $('#reportrange').data('daterangepicker');
-                        var desdeFecha = moment().subtract(1, 'years'); 
-                        var hastaFecha = moment();
-                        var RFCEmisor = $("#RFCEmisor").val();
-                        var RFCReceptor = $("#RFCReceptor").val();
-                        var usoCFDI = $("#usoCFDI").val();
-                        var metodoPago = $("#metodoPago").val();
-                        var formaPago = $("#formaPago").val();
-                        var tipoComprobante = $("#tiposComprobante").val();
-                        var emitidoRecibido = "recibido";
-                        var status = $("#status").val();
+        var datePicker = $('#reportrange').data('daterangepicker');
+        var desdeFecha = datePicker.startDate.format('YYYY-MM-DD');
+        var hastaFecha = datePicker.endDate.format('YYYY-MM-DD');
+        var RFCEmisor = $("#RFCEmisor").val();
+        var RFCReceptor = $("#RFCReceptor").val();
+        var usoCFDI = $("#usoCFDI").val();
+        var metodoPago = $("#metodoPago").val();
+        var formaPago = $("#formaPago").val();
+        var tipoComprobante = $("#tiposComprobante").val();
+        var emitidoRecibido = "recibido";
+        var status = $("#status").val();
 
-                        tableXml.ajax.url(`<?= base_url('admin/xmlFilters') ?>/`
-                        + desdeFecha
-                        + '/' + hastaFecha
-                        + '/' + "I"
-                        + '/' + RFCEmisor
-                        + '/' + RFCReceptor
-                        + '/' + usoCFDI
-                        + '/' + metodoPago
-                        + '/' + formaPago
-                        + '/' + tipoComprobante
-                        + '/' + emitidoRecibido
-                        + '/' + status
-                        ).load();
-                        
-            
-                        $(".tiposComprobante").val("I").trigger("change");
-                        $(".emitidoRecibido").val("recibido").trigger("change");
-                        
-                        EOT;
+        var url = `<?= base_url('admin/xmlFilters') ?>/` +
+                  encodeURIComponent(desdeFecha) + '/' +
+                  encodeURIComponent(hastaFecha) + '/' +
+                  encodeURIComponent("I") + '/' +
+                  encodeURIComponent(RFCEmisor) + '/' +
+                  encodeURIComponent(RFCReceptor) + '/' +
+                  encodeURIComponent(usoCFDI) + '/' +
+                  encodeURIComponent(metodoPago) + '/' +
+                  encodeURIComponent(formaPago) + '/' +
+                  encodeURIComponent(tipoComprobante) + '/' +
+                  encodeURIComponent(emitidoRecibido) + '/' +
+                  encodeURIComponent(status);
+
+        tableXml.ajax.url(url).load();
+
+        $(".tiposComprobante").val("I").trigger("change");
+        $(".emitidoRecibido").val("recibido").trigger("change");
+EOT;
 
     echo $filtrosGastrosFacturados;
 }
@@ -1031,82 +1027,76 @@ if (isset($gastosFacturados)) {
 
 if (isset($ingresosNomina)) {
 
-
-
     $filtrosIngresosNominas = <<<EOT
-                
-                        var datePicker = $('#reportrange').data('daterangepicker');
-                        
-                        var desdeFecha = moment().subtract(1, 'years'); 
-                        var hastaFecha = moment();
-                        var RFCEmisor = $("#RFCEmisor").val();
-                        var RFCReceptor = $("#RFCReceptor").val();
-                        var usoCFDI = $("#usoCFDI").val();
-                        var metodoPago = $("#metodoPago").val();
-                        var formaPago = $("#formaPago").val();
-                        var tipoComprobante = $("#tiposComprobante").val();
-                        var emitidoRecibido = "recibido";
-                        var status = $("#status").val();
+        var datePicker = $('#reportrange').data('daterangepicker');
+        var desdeFecha = datePicker.startDate.format('YYYY-MM-DD');
+        var hastaFecha = datePicker.endDate.format('YYYY-MM-DD');
+        var RFCEmisor = $("#RFCEmisor").val();
+        var RFCReceptor = $("#RFCReceptor").val();
+        var usoCFDI = $("#usoCFDI").val();
+        var metodoPago = $("#metodoPago").val();
+        var formaPago = $("#formaPago").val();
+        var tipoComprobante = $("#tiposComprobante").val();
+        var emitidoRecibido = "recibido";
+        var status = $("#status").val();
 
-                        tableXml.ajax.url(`<?= base_url('admin/xmlFilters') ?>/`
-                        + desdeFecha
-                        + '/' + hastaFecha
-                        + '/' + "N"
-                        + '/' + RFCEmisor
-                        + '/' + RFCReceptor
-                        + '/' + usoCFDI
-                        + '/' + metodoPago
-                        + '/' + formaPago
-                        + '/' + tipoComprobante
-                        + '/' + emitidoRecibido
-                        + '/' + status
-                        ).load();
-            
-                        $(".tiposComprobante").val("N").trigger("change");
-                        $(".emitidoRecibido").val("recibido").trigger("change");
+        // Codificar y construir la URL segura
+        var url = `<?= base_url('admin/xmlFilters') ?>/` +
+                  encodeURIComponent(desdeFecha) + '/' +
+                  encodeURIComponent(hastaFecha) + '/' +
+                  encodeURIComponent("N") + '/' +
+                  encodeURIComponent(RFCEmisor) + '/' +
+                  encodeURIComponent(RFCReceptor) + '/' +
+                  encodeURIComponent(usoCFDI) + '/' +
+                  encodeURIComponent(metodoPago) + '/' +
+                  encodeURIComponent(formaPago) + '/' +
+                  encodeURIComponent(tipoComprobante) + '/' +
+                  encodeURIComponent(emitidoRecibido) + '/' +
+                  encodeURIComponent(status);
 
-                        EOT;
+        tableXml.ajax.url(url).load();
+
+        $(".tiposComprobante").val("N").trigger("change");
+        $(".emitidoRecibido").val("recibido").trigger("change");
+EOT;
 
     echo $filtrosIngresosNominas;
 }
 
 if (isset($facturasEmitidas)) {
 
-
-
     $filtrosFacturasEmitidas = <<<EOT
-                
-                        var datePicker = $('#reportrange').data('daterangepicker');
-                        
-                        var desdeFecha = moment().subtract(1, 'years'); 
-                        var hastaFecha = moment();
-                        var RFCEmisor = $("#RFCEmisor").val();
-                        var RFCReceptor = $("#RFCReceptor").val();
-                        var usoCFDI = $("#usoCFDI").val();
-                        var metodoPago = $("#metodoPago").val();
-                        var formaPago = $("#formaPago").val();
-                        var tipoComprobante = "0";
-                        var emitidoRecibido = "emitido";
-                        var status = $("#status").val();
+        var datePicker = $('#reportrange').data('daterangepicker');
+        var desdeFecha = datePicker.startDate.format('YYYY-MM-DD');
+        var hastaFecha = datePicker.endDate.format('YYYY-MM-DD');
+        var RFCEmisor = $("#RFCEmisor").val();
+        var RFCReceptor = $("#RFCReceptor").val();
+        var usoCFDI = $("#usoCFDI").val();
+        var metodoPago = $("#metodoPago").val();
+        var formaPago = $("#formaPago").val();
+        var tipoComprobante = "0";
+        var emitidoRecibido = "emitido";
+        var status = $("#status").val();
 
-                        tableXml.ajax.url(`<?= base_url('admin/xmlFilters') ?>/`
-                        + desdeFecha
-                        + '/' + hastaFecha
-                        + '/' + "N"
-                        + '/' + RFCEmisor
-                        + '/' + RFCReceptor
-                        + '/' + usoCFDI
-                        + '/' + metodoPago
-                        + '/' + formaPago
-                        + '/' + tipoComprobante
-                        + '/' + emitidoRecibido
-                        + '/' + status
-                        ).load();
-            
-                        $(".tiposComprobante").val("0").trigger("change");
-                        $(".emitidoRecibido").val("emitido").trigger("change");
+        // Codificar parámetros en la URL
+        var url = `<?= base_url('admin/xmlFilters') ?>/` +
+                  encodeURIComponent(desdeFecha) + '/' +
+                  encodeURIComponent(hastaFecha) + '/' +
+                  encodeURIComponent("N") + '/' +
+                  encodeURIComponent(RFCEmisor) + '/' +
+                  encodeURIComponent(RFCReceptor) + '/' +
+                  encodeURIComponent(usoCFDI) + '/' +
+                  encodeURIComponent(metodoPago) + '/' +
+                  encodeURIComponent(formaPago) + '/' +
+                  encodeURIComponent(tipoComprobante) + '/' +
+                  encodeURIComponent(emitidoRecibido) + '/' +
+                  encodeURIComponent(status);
 
-                        EOT;
+        tableXml.ajax.url(url).load();
+
+        $(".tiposComprobante").val("0").trigger("change");
+        $(".emitidoRecibido").val("emitido").trigger("change");
+EOT;
 
     echo $filtrosFacturasEmitidas;
 }
