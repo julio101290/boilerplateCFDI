@@ -232,73 +232,28 @@ class XmlController extends BaseController {
         $empresasRFC = array_column($titulos["empresas"], "rfc");
 
         if ($this->request->isAJAX()) {
-            $datos = $this->xml->select('id
-             ,uuidTimbre
-             ,archivoXML
-             ,rfcEmisor
-             ,rfcReceptor
-             ,nombreEmisor
-             ,nombreReceptor
-             ,serie
-             ,folio
-             ,tipoComprobante
-             ,fecha
-             ,fechaTimbrado
-             ,total
-             ,base16
-             ,totalImpuestos16
-             ,base8
-             ,totalImpuestos8
-             ,created_at
-             ,deleted_at
-             ,status
-             ,updated_at
-             ,uuidPaquete')->where('deleted_at', null)
-                    ->whereIn("idEmpresa", $empresasID)
-                    ->where('fechaTimbrado >=', $desdeFecha . ' 00:00:00')
-                    ->where('fechaTimbrado <=', $hastaFecha . ' 23:59:59')
-                    ->groupStart()
-                    ->where('\'true\'', $todas, true)
-                    ->orWhereIn('rfcEmisor', $empresasRFC)
-                    ->groupEnd()
-                    ->groupStart()
-                    ->Where('\'0\'', $RFCEmisor)
-                    ->orWhere("'0'='$RFCEmisor'")
-                    ->groupEnd()
-                    ->groupStart()
-                    ->where('rfcReceptor', $RFCReceptor, true)
-                    ->orWhere("'0'='$RFCReceptor'")
-                    ->groupEnd()
-                    ->groupStart()
-                    ->orWhere("'0'='$metodoPago'")
-                    ->orWhere('metodoPago', $metodoPago)
-                    ->groupEnd()
-                    ->groupStart()
-                    ->orWhere("'0'='$formaPago'")
-                    ->orwhere('formaPago', $formaPago)
-                    ->groupEnd()
-                    ->groupStart()
-                    ->orWhere("'0'='$usoCFDI'")
-                    ->orWhere('usoCFDI', $usoCFDI)
-                    ->groupEnd()
-                    ->groupStart()
-                    ->orWhere("'0'='$tipoComprobante'")
-                    ->orWhere('tipoComprobante', $tipoComprobante)
-                    ->groupEnd()
-                    ->groupStart()
-                    ->orWhere("'0'='$emitidoRecibido'")
-                    ->orWhere('emitidoRecibido', $emitidoRecibido)
-                    ->groupEnd()
-                    ->groupStart()
-                    ->orWhere("'0'='$status'")
-                    ->orWhere('status', $status)
-                    ->groupEnd()
+            $params = [
+                'draw' => $this->request->getGet('draw'),
+                'start' => $this->request->getGet('start'),
+                'length' => $this->request->getGet('length'),
+                'order' => $this->request->getGet('order'),
+                'columns' => $this->request->getGet('columns'),
+                'search' => $this->request->getGet('search'),
+            ];
 
+            $datos = $this->xml->mdlGetXmlFilters(
+                    $empresasID, $desdeFecha, $hastaFecha, $todas,
+                    $RFCEmisor, $RFCReceptor, $metodoPago, $formaPago,
+                    $usoCFDI, $tipoComprobante, $emitidoRecibido, $status,
+                    $params
+            );
 
-
-            ;
-
-            return \Hermawan\DataTables\DataTable::of($datos)->toJson(true);
+            return $this->response->setJSON([
+                        'draw' => intval($params['draw'] ?? 0),
+                        'recordsTotal' => $datos['recordsTotal'],
+                        'recordsFiltered' => $datos['recordsFiltered'],
+                        'data' => $datos['data'],
+            ]);
         }
     }
 

@@ -344,4 +344,152 @@ class XmlModel extends Model {
             'data' => $data,
         ];
     }
+
+    public function mdlGetXmlFilters(
+            array $empresasID,
+            string $desdeFecha,
+            string $hastaFecha,
+            string $todas,
+            string $RFCEmisor = '0',
+            string $RFCReceptor = '0',
+            string $metodoPago = '0',
+            string $formaPago = '0',
+            string $usoCFDI = '0',
+            string $tipoComprobante = '0',
+            string $emitidoRecibido = '0',
+            string $status = '0',
+            array $params = []
+    ): array {
+        $builder = $this->db->table('xml') // Reemplaza con tu tabla real
+                ->select('*')
+                ->where('deleted_at', null)
+                ->whereIn('idEmpresa', $empresasID)
+                ->where('fechaTimbrado >=', $desdeFecha . ' 00:00:00')
+                ->where('fechaTimbrado <=', $hastaFecha . ' 23:59:59');
+
+        if ($todas !== 'true') {
+            $builder->whereIn('rfcEmisor', $empresasID); // Ajustar si usas RFCs diferentes
+        }
+
+        if ($RFCEmisor !== '0') {
+            $builder->where('rfcEmisor', $RFCEmisor);
+        }
+
+        if ($RFCReceptor !== '0') {
+            $builder->where('rfcReceptor', $RFCReceptor);
+        }
+
+        if ($metodoPago !== '0') {
+            $builder->where('metodoPago', $metodoPago);
+        }
+
+        if ($formaPago !== '0') {
+            $builder->where('formaPago', $formaPago);
+        }
+
+        if ($usoCFDI !== '0') {
+            $builder->where('usoCFDI', $usoCFDI);
+        }
+
+        if ($tipoComprobante !== '0') {
+            $builder->where('tipoComprobante', $tipoComprobante);
+        }
+
+        if ($emitidoRecibido !== '0') {
+            $builder->where('emitidoRecibido', $emitidoRecibido);
+        }
+
+        if ($status !== '0') {
+            $builder->where('status', $status);
+        }
+
+        // 🔍 Búsqueda global
+        $search = $params['search']['value'] ?? '';
+        if (!empty($search)) {
+            $builder->groupStart();
+            foreach ($params['columns'] as $col) {
+                if (!empty($col['data']) && is_string($col['data'])) {
+                    $builder->orLike($col['data'], $search);
+                }
+            }
+            $builder->groupEnd();
+        }
+
+        // 🔎 Filtros por columna individuales
+        foreach ($params['columns'] ?? [] as $col) {
+            if (!empty($col['search']['value']) && !empty($col['data'])) {
+                $builder->like($col['data'], $col['search']['value']);
+            }
+        }
+
+        // 🔃 Ordenamiento
+        if (!empty($params['order'])) {
+            foreach ($params['order'] as $ord) {
+                $idx = $ord['column'];
+                $dir = $ord['dir'] ?? 'asc';
+                $col = $params['columns'][$idx]['data'] ?? null;
+                if ($col) {
+                    $builder->orderBy($col, $dir);
+                }
+            }
+        }
+
+        // 🔢 Paginación
+        if (!empty($params['length']) && $params['length'] != -1) {
+            $builder->limit($params['length'], $params['start']);
+        }
+
+        $data = $builder->get()->getResultArray();
+
+        // Conteo total sin filtros
+        $totalBuilder = $this->db->table('xml')
+                ->where('deleted_at', null)
+                ->whereIn('idEmpresa', $empresasID)
+                ->where('fechaTimbrado >=', $desdeFecha . ' 00:00:00')
+                ->where('fechaTimbrado <=', $hastaFecha . ' 23:59:59');
+
+        if ($todas !== 'true') {
+            $totalBuilder->whereIn('rfcEmisor', $empresasID);
+        }
+
+        if ($RFCEmisor !== '0') {
+            $totalBuilder->where('rfcEmisor', $RFCEmisor);
+        }
+
+        if ($RFCReceptor !== '0') {
+            $totalBuilder->where('rfcReceptor', $RFCReceptor);
+        }
+
+        if ($metodoPago !== '0') {
+            $totalBuilder->where('metodoPago', $metodoPago);
+        }
+
+        if ($formaPago !== '0') {
+            $totalBuilder->where('formaPago', $formaPago);
+        }
+
+        if ($usoCFDI !== '0') {
+            $totalBuilder->where('usoCFDI', $usoCFDI);
+        }
+
+        if ($tipoComprobante !== '0') {
+            $totalBuilder->where('tipoComprobante', $tipoComprobante);
+        }
+
+        if ($emitidoRecibido !== '0') {
+            $totalBuilder->where('emitidoRecibido', $emitidoRecibido);
+        }
+
+        if ($status !== '0') {
+            $totalBuilder->where('status', $status);
+        }
+
+        $total = $totalBuilder->countAllResults();
+
+        return [
+            'data' => $data,
+            'recordsTotal' => $total,
+            'recordsFiltered' => $total,
+        ];
+    }
 }
