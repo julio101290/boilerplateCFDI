@@ -58,10 +58,16 @@ class XmlModel extends Model {
         // Detectar si estamos usando PostgreSQL o MySQL/MariaDB
         $dbDriver = $this->db->DBDriver;
 
-        // Elegir la función de agrupación por periodo
+        // Función para formatear nombre de columna
         if ($dbDriver === 'Postgre') {
+            $col = function ($name) {
+                return "\"xml\".\"{$name}\"";
+            };
             $periodExpr = "TO_CHAR(\"xml\".\"fecha\", 'YYYYMM')";
         } else {
+            $col = function ($name) {
+                return "`xml`.`{$name}`";
+            };
             $periodExpr = "DATE_FORMAT(`xml`.`fecha`, '%Y%m')";
         }
 
@@ -70,28 +76,36 @@ class XmlModel extends Model {
 
         $builder = $this->db->table('xml');
 
+        // Ingresos
+        $ingresosCase = "
+        SUM(CASE 
+            WHEN 
+                ({$col('rfcEmisor')} IN {$escapedRFCs} AND {$col('tipoComprobante')} = 'I') OR
+                ({$col('rfcReceptor')} IN {$escapedRFCs} AND {$col('tipoComprobante')} = 'N') OR
+                ({$col('rfcReceptor')} IN {$escapedRFCs} AND {$col('tipoComprobante')} = 'E')
+            THEN {$col('total')}
+            ELSE 0
+        END) as ingreso
+    ";
+
+        // Egresos
+        $egresosCase = "
+        SUM(CASE 
+            WHEN 
+                ({$col('rfcEmisor')} IN {$escapedRFCs} AND {$col('tipoComprobante')} = 'E') OR
+                ({$col('rfcReceptor')} NOT IN {$escapedRFCs} AND {$col('tipoComprobante')} = 'N') OR
+                ({$col('rfcReceptor')} IN {$escapedRFCs} AND {$col('tipoComprobante')} = 'I')
+            THEN {$col('total')}
+            ELSE 0
+        END) as egreso
+    ";
+
         $builder->select("{$periodExpr} as periodo", false)
-                ->select("
-            SUM(CASE 
-                WHEN 
-                    (\"xml\".\"rfcEmisor\" IN {$escapedRFCs} AND \"xml\".\"tipoComprobante\" = 'I') OR
-                    (\"xml\".\"rfcReceptor\" IN {$escapedRFCs} AND \"xml\".\"tipoComprobante\" = 'N') OR
-                    (\"xml\".\"rfcReceptor\" IN {$escapedRFCs} AND \"xml\".\"tipoComprobante\" = 'E')
-                THEN \"xml\".\"total\"
-                ELSE 0
-            END) as ingreso", false)
-                ->select("
-            SUM(CASE 
-                WHEN 
-                    (\"xml\".\"rfcEmisor\" IN {$escapedRFCs} AND \"xml\".\"tipoComprobante\" = 'E') OR
-                    (\"xml\".\"rfcReceptor\" NOT IN {$escapedRFCs} AND \"xml\".\"tipoComprobante\" = 'N') OR
-                    (\"xml\".\"rfcReceptor\" IN {$escapedRFCs} AND \"xml\".\"tipoComprobante\" = 'I')
-                THEN \"xml\".\"total\"
-                ELSE 0
-            END) as egreso", false)
+                ->select($ingresosCase, false)
+                ->select($egresosCase, false)
                 ->whereIn('xml.idEmpresa', $empresas)
-                ->where('xml.fechaTimbrado >=', $desdeFecha . ' 00:00:00')
-                ->where('xml.fechaTimbrado <=', $hastaFecha . ' 23:59:59')
+                ->where("{$col('fechaTimbrado')} >=", $desdeFecha . ' 00:00:00')
+                ->where("{$col('fechaTimbrado')} <=", $hastaFecha . ' 23:59:59')
                 ->groupBy($periodExpr);
 
         return $builder->get();
