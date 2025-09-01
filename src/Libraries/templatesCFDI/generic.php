@@ -465,7 +465,7 @@ if (!isset($catalogos) || !($catalogos instanceof \PhpCfdi\CfdiToPdf\Catalogs\Ca
                         <?php endforeach; ?>
                     </p>
                     <?php endif; ?>
-                <?php foreach ($concepto->searchNodes('cfdi:CuentaPedial') as $cuentaPredial) : ?>
+                <?php foreach ($concepto->searchNodes('cfdi:CuentaPredial') as $cuentaPredial) : ?>
                     <p>
                         <strong>Cuenta predial: </strong><?= $this->e($cuentaPredial['Numero']) ?>
                     </p>
