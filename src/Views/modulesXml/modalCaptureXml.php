@@ -111,7 +111,7 @@
 
         var idXML = $("#idXml").val();
         var idEmpresa = $("#idEmpresaModal").val();
-       
+
         var archivos = $("#archivoXML").prop("files");
 
 
@@ -151,7 +151,7 @@
 
         var datos = new FormData();
         datos.append("idEmpresa", idEmpresa);
-        
+
         for (var i = 0; i < archivos.length; i++) {
             datos.append("txt_archivo[]", archivos[i]);
         }

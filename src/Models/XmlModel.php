@@ -374,7 +374,11 @@ class XmlModel extends Model {
             string $status = '0',
             array $params = []
     ): array {
-        $builder = $this->db->table('xml') // Reemplaza con tu tabla real
+
+        /* =========================
+         * QUERY BASE
+         * ========================= */
+        $builder = $this->db->table('xml')
                 ->select('*')
                 ->where('deleted_at', null)
                 ->whereIn('idEmpresa', $empresasID)
@@ -382,7 +386,7 @@ class XmlModel extends Model {
                 ->where('fechaTimbrado <=', $hastaFecha . ' 23:59:59');
 
         if ($todas !== 'true') {
-            $builder->whereIn('rfcEmisor', $empresasID); // Ajustar si usas RFCs diferentes
+            $builder->whereIn('rfcEmisor', $empresasID);
         }
 
         if ($RFCEmisor !== '0') {
@@ -417,45 +421,68 @@ class XmlModel extends Model {
             $builder->where('status', $status);
         }
 
-        // 🔍 Búsqueda global
+        /* =========================
+         * 🔍 BÚSQUEDA GLOBAL
+         * ========================= */
         $search = $params['search']['value'] ?? '';
-        if (!empty($search)) {
+        if ($search !== '') {
             $builder->groupStart();
-            foreach ($params['columns'] as $col) {
-                if (!empty($col['data']) && is_string($col['data'])) {
+            foreach ($params['columns'] ?? [] as $col) {
+                if (
+                        !empty($col['data']) &&
+                        ($col['searchable'] ?? 'true') === 'true'
+                ) {
                     $builder->orLike($col['data'], $search);
                 }
             }
             $builder->groupEnd();
         }
 
-        // 🔎 Filtros por columna individuales
+        /* =========================
+         * 🔎 FILTRO POR COLUMNA
+         * ========================= */
         foreach ($params['columns'] ?? [] as $col) {
-            if (!empty($col['search']['value']) && !empty($col['data'])) {
+            if (
+                    !empty($col['search']['value']) &&
+                    !empty($col['data']) &&
+                    ($col['searchable'] ?? 'true') === 'true'
+            ) {
                 $builder->like($col['data'], $col['search']['value']);
             }
         }
 
-        // 🔃 Ordenamiento
+        /* =========================
+         * 🔃 ORDENAMIENTO
+         * ========================= */
         if (!empty($params['order'])) {
             foreach ($params['order'] as $ord) {
+
                 $idx = $ord['column'];
                 $dir = $ord['dir'] ?? 'asc';
-                $col = $params['columns'][$idx]['data'] ?? null;
-                if ($col) {
-                    $builder->orderBy($col, $dir);
+                $column = $params['columns'][$idx] ?? null;
+
+                if (
+                        $column &&
+                        !empty($column['data']) &&
+                        ($column['orderable'] ?? 'true') === 'true'
+                ) {
+                    $builder->orderBy($column['data'], $dir);
                 }
             }
         }
 
-        // 🔢 Paginación
-        if (!empty($params['length']) && $params['length'] != -1) {
-            $builder->limit($params['length'], $params['start']);
+        /* =========================
+         * 🔢 PAGINACIÓN
+         * ========================= */
+        if (!empty($params['length']) && (int) $params['length'] !== -1) {
+            $builder->limit((int) $params['length'], (int) ($params['start'] ?? 0));
         }
 
         $data = $builder->get()->getResultArray();
 
-        // Conteo total sin filtros
+        /* =========================
+         * 📊 TOTAL DE REGISTROS
+         * ========================= */
         $totalBuilder = $this->db->table('xml')
                 ->where('deleted_at', null)
                 ->whereIn('idEmpresa', $empresasID)
