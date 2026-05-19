@@ -58,4 +58,16 @@ $routes->group('admin', function ($routes) {
             , 'XmlController::cancelaCFDI'
             , ['namespace' => 'julio101290\boilerplateCFDI\Controllers']
     );
+
+    $routes->post('xml/getRFCEmisorAjax'
+            , 'XmlController::getRFCEmisorAjax'
+            , ['namespace' => 'julio101290\boilerplateCFDI\Controllers']
+    );
+    
+    
+    $routes->post('xml/getRFCReceptorAjax'
+            , 'XmlController::getRFCReceptorAjax'
+            , ['namespace' => 'julio101290\boilerplateCFDI\Controllers']
+    );
+    
 });
