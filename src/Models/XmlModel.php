@@ -176,7 +176,7 @@ class XmlModel extends Model {
         $subquery = $dbDriver === 'Postgre' ? 'NOT EXISTS (SELECT 1 FROM enlacexml b WHERE "a"."uuidTimbre" = "b"."uuidXML")' : 'NOT EXISTS (SELECT 1 FROM enlacexml b WHERE a.uuidTimbre = b.uuidXML)';
 
         $builder = $this->db->table('xml a')
-                ->select('a.id, a.uuidTimbre, serie, folio, rfcReceptor, rfcEmisor, nombreReceptor, total, fecha, tipoComprobante')
+                ->select('a.id, a.uuidTimbre, serie, folio, rfcReceptor, rfcEmisor, nombreReceptor,nombreEmisor, total, fecha, tipoComprobante')
                 ->where($subquery, null, false)
                 ->where('a.tipoComprobante', $tipoComprobante)
                 ->whereIn('a.idEmpresa', $empresas);
